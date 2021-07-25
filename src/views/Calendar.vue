@@ -41,7 +41,7 @@
                     <v-card-text>
                       <v-container>
                         <v-row>
-                          <v-col cols="12" sm="6" md="4">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Giorno"
                               required
@@ -49,7 +49,7 @@
                               disabled
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="6">
+                          <v-col cols="12" md="4">
                             <v-autocomplete
                               :items="[
                                 'Corso',
@@ -62,17 +62,22 @@
                               ]"
                               label="Tipo Giornata"
                               v-model="edit_tipologia"
+                              required
+                              :error-messages="nameErrors"
+                              @input="$v.name.$touch()"
+                              @blur="$v.name.$touch()"
                             ></v-autocomplete>
                           </v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Entrata Mattino"
                               type="time"
                               v-model="edit_entrata_mattino"
                               @input="up"
+                              required
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Uscita Mattino"
                               type="time"
@@ -80,7 +85,7 @@
                               @input="up"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Entrata Pomeriggio"
                               type="time"
@@ -88,7 +93,7 @@
                               @input="up"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Uscita Pomeriggio"
                               type="time"
@@ -96,7 +101,7 @@
                               @input="up"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="6" md="50">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Totale Giornata"
                               v-model="edit_totale_giorno"
@@ -104,29 +109,34 @@
                               disabled
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="6"></v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Ferie"
                               type="time"
                               v-model="edit_ferie"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Permessi"
                               type="time"
                               v-model="edit_permessi"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12" sm="3">
+                          <v-col cols="12" md="4">
                             <v-text-field
                               label="Ticket"
                               prefix="€"
                               v-model="edit_ticket"
                             ></v-text-field>
                           </v-col>
-                          <v-col cols="12">
+                          <v-col cols="12" md="4">
+                            <v-checkbox
+                              v-model="edit_check_mese"
+                              label="Tutto il mese"
+                            ></v-checkbox>
+                          </v-col>
+                          <v-col cols="12" md = "4">
                             <v-textarea
                               v-model="edit_note"
                               name="input-7-1"
@@ -134,12 +144,7 @@
                               value=""
                             ></v-textarea>
                           </v-col>
-                          <v-col cols="12" sm="3">
-                            <v-checkbox
-                              v-model="edit_check_mese"
-                              label="Tutto il mese"
-                            ></v-checkbox>
-                          </v-col>
+                          
                         </v-row>
                       </v-container>
                     </v-card-text>
@@ -238,9 +243,18 @@
 import { commentsCollection } from "@/firebase";
 import { mapState } from "vuex";
 import moment from "moment";
+import { validationMixin } from 'vuelidate'
+import { required, maxLength, email } from 'vuelidate/lib/validators'
 export default {
+      mixins: [validationMixin],
+
+    validations: {
+      name: { required, maxLength: maxLength(10) },
+      select: { required }
+    },
   data() {
     return {
+       valid: false,
       ore_ferie_totali_view: "00:00",
       ore_permesso_totali_view: "00:00",
       ore_ferie_totali: 0,
@@ -294,6 +308,19 @@ export default {
   },
   computed: {
     ...mapState(["userProfile", "events"]),
+
+       selectErrors () {
+        const errors = []
+        if (!this.$v.select.$dirty) return errors
+        !this.$v.select.required && errors.push('Item is required')
+        return errors
+      },
+      nameErrors () {
+        const errors = []
+        if (!this.$v.name.$dirty) return errors
+        !this.$v.name.required && errors.push('Is required.')
+        return errors
+      },
   },
   created() {
     this.setInfo(new Date());
@@ -414,6 +441,7 @@ export default {
 
     setTimeThroughoutMonth() {
       //devo capire come passare i dati ogni volta in modo da riutilizzare il save fatto prima
+      console.log("enteree")
       var date = new Date(this.current_date);
       var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
       var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -458,6 +486,20 @@ export default {
     },
 
     saveDay(clearEdit = true) {
+       this.$v.$touch();
+             if (this.edit_tipologia === undefined) {
+      console.log(this.edit_tipologia)
+
+                this.open_dialog_edit_giorno = true;
+                clearEdit = false;
+          return;
+          }
+       if (this.edit_check_mese) {
+        checkMeseForFilter = true;
+        this.edit_check_mese = false;
+      }
+
+
       this.ore_lavoro_totali = 0;
       this.ore_ferie_totali = "00:00";
       this.ore_permesso_totali = "00:00";
@@ -467,10 +509,7 @@ export default {
       var idForFilter = this.edit_id;
       var dataForFilter = this.edit_data;
       var checkMeseForFilter = false;
-      if (this.edit_check_mese) {
-        checkMeseForFilter = true;
-        this.edit_check_mese = false;
-      }
+
 
       var options = { weekday: "long" };
       this.edit_giorno_text = new Date(dataForFilter).toLocaleString(

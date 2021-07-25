@@ -212,10 +212,11 @@ export default {
   },
 
   computed: {
-    ...mapState(["userProfile", "users", "eventsById"]),
+    ...mapState(["userProfile", "users", "eventsById"])
   },
   created() {
     this.setInfo(new Date());
+    this.eventsById = []
   },
   beforeUpdate() {
     this.setInfo(this.current_date);
@@ -223,6 +224,7 @@ export default {
   mounted() {
     this.$refs.calendar.checkChange();
     this.setInfo(this.current_date);
+    this.eventsById = [];
   },
   methods: {
     changeSelect() {
@@ -230,6 +232,7 @@ export default {
         this.$store.dispatch("getEventsById", { content: this.selected });
     },
     startDownload() {
+      console.log("enter")
       var date = new Date(this.current_date);
       var firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
       var lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -278,6 +281,7 @@ export default {
               ore_permesso_totali: 0,
               ore_lavoro_totali: 0,
             });
+             console.log(this.eventsById);
           }
         }
       }
