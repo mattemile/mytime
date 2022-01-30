@@ -4,13 +4,6 @@ import 'firebase/firestore'
 
 // firebase init - add your own config here
 var firebaseConfig = {
-  apiKey: "AIzaSyCbHn748ThiXPUSefa6xpmwYkBsRHBXLTo",
-  authDomain: "vue-mytime.firebaseapp.com",
-  databaseURL: "https://vue-mytime-default-rtdb.firebaseio.com",
-  projectId: "vue-mytime",
-  storageBucket: "vue-mytime.appspot.com",
-  messagingSenderId: "1034254839275",
-  appId: "1:1034254839275:web:da532f9e743d6071633dae"
 };
 firebase.initializeApp(firebaseConfig)
 
